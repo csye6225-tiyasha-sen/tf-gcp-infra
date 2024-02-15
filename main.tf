@@ -24,7 +24,6 @@ resource "google_compute_network" "vpc_network" {
   delete_default_routes_on_create = true
 }
 
-
 resource "google_compute_subnetwork" "subnet_webapp" {
   for_each      = google_compute_network.vpc_network
   name          = "${var.subnetwebapp-name}-${each.value.name}"

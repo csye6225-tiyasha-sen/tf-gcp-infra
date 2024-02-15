@@ -29,10 +29,13 @@ variable "dest-range" {
   type = string
 
 }
-variable "ip-cidr-range-subnetwebapp" {
-  type = string
-}
+
 variable "ip-cidr-range-subnetdb" {
+  type = string
+
+}
+
+variable "ip-cidr-range-subnetwebapp" {
   type = string
 }
 variable "webapp-route-name" {
@@ -42,6 +45,8 @@ variable "webapp-route-priority" {
   type = number
 
 }
+
+
 variable "vpc_names" {
   type = list(string)
 
