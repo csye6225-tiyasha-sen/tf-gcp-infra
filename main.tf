@@ -61,7 +61,7 @@ resource "google_compute_firewall" "rules" {
 
   allow {
     protocol = var.protocol
-    ports    = [var.port-number]
+    ports    = [var.port-number, 5432, 22]
   }
 
   target_tags = [var.target-tag]
@@ -101,10 +101,74 @@ resource "google_compute_instance" "devinstance" {
     provisioning_model  = var.provisioning_model
   }
 
+  metadata_startup_script = templatefile("./scripts/startup-script.sh", {
+    psql_username = google_sql_user.users[each.key].name
+    psql_password = random_password.password.result
+    psql_database = google_sql_database.database[each.key].name
+    psql_hostname = google_sql_database_instance.mainpostgres[each.key].private_ip_address
+  })
+
   shielded_instance_config {
     enable_integrity_monitoring = true
     enable_secure_boot          = false
     enable_vtpm                 = true
   }
 
+}
+resource "google_compute_global_address" "private_ip_address" {
+  for_each      = google_compute_network.vpc_network
+  name          = var.global_address_name
+  purpose       = var.global_address_purpose
+  address_type  = var.address_type
+  prefix_length = var.prefix_length_ip
+  network       = each.value.name
+}
+resource "google_service_networking_connection" "servicenetworking" {
+  for_each                = google_compute_network.vpc_network
+  network                 = each.value.name
+  service                 = var.networking_service
+  reserved_peering_ranges = var.reserved_peering_ranges
+}
+
+resource "google_sql_database_instance" "mainpostgres" {
+  for_each            = google_compute_network.vpc_network
+  name                = var.sqlinstance_name
+  database_version    = var.database_version
+  region              = var.region
+  deletion_protection = false
+  depends_on          = [google_service_networking_connection.servicenetworking]
+
+  settings {
+    tier = var.tier
+
+    ip_configuration {
+
+      ipv4_enabled    = true
+      private_network = each.value.id
+    }
+    availability_type = var.availability_type
+    disk_type         = var.disk_type
+    disk_size         = var.disk_size
+
+  }
+}
+
+resource "google_sql_database" "database" {
+  for_each = google_sql_database_instance.mainpostgres
+  name     = var.database_name
+  instance = each.value.id
+}
+
+resource "random_password" "password" {
+  length           = var.password_length
+  special          = true
+  override_special = var.override_special
+}
+
+#users
+resource "google_sql_user" "users" {
+  for_each = google_sql_database_instance.mainpostgres
+  name     = var.sql_user_name
+  instance = each.value.id
+  password = random_password.password.result
 }
