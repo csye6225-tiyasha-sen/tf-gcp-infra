@@ -143,9 +143,7 @@ variable "global_address_purpose" {
 variable "address_type" {
   type = string
 }
-variable "descriptioninstance" {
-  type = string
-}
+
 variable "prefix_length_ip" {
   type = number
 }
@@ -154,9 +152,6 @@ variable "networking_service" {
   type = string
 }
 
-variable "reserved_peering_ranges" {
-  type = list(string)
-}
 
 variable "sqlinstance_name" {
   type = string
@@ -181,8 +176,6 @@ variable "disk_type" {
 variable "disk_size" {
   type = number
 }
-
-
 
 variable "database_name" {
   type = string

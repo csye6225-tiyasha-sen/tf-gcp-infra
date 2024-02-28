@@ -61,8 +61,10 @@ resource "google_compute_firewall" "rules" {
 
   allow {
     protocol = var.protocol
-    ports    = [var.port-number, 5432, 22]
+    ports    = [var.port-number]
   }
+
+  #add deny port in new firewall
 
   target_tags = [var.target-tag]
 }
@@ -102,7 +104,7 @@ resource "google_compute_instance" "devinstance" {
   }
 
   metadata_startup_script = templatefile("./scripts/startup-script.sh", {
-    psql_username = google_sql_user.users[each.key].name
+    psql_username = var.sql_user_name
     psql_password = random_password.password.result
     psql_database = google_sql_database.database[each.key].name
     psql_hostname = google_sql_database_instance.mainpostgres[each.key].private_ip_address
@@ -122,12 +124,13 @@ resource "google_compute_global_address" "private_ip_address" {
   address_type  = var.address_type
   prefix_length = var.prefix_length_ip
   network       = each.value.name
+
 }
 resource "google_service_networking_connection" "servicenetworking" {
   for_each                = google_compute_network.vpc_network
   network                 = each.value.name
   service                 = var.networking_service
-  reserved_peering_ranges = var.reserved_peering_ranges
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address[each.key].name]
 }
 
 resource "google_sql_database_instance" "mainpostgres" {
@@ -143,14 +146,16 @@ resource "google_sql_database_instance" "mainpostgres" {
 
     ip_configuration {
 
-      ipv4_enabled    = true
+      ipv4_enabled    = false
       private_network = each.value.id
+
     }
+
     availability_type = var.availability_type
     disk_type         = var.disk_type
     disk_size         = var.disk_size
-
   }
+
 }
 
 resource "google_sql_database" "database" {
@@ -171,4 +176,5 @@ resource "google_sql_user" "users" {
   name     = var.sql_user_name
   instance = each.value.id
   password = random_password.password.result
+  #depends_on = [google_sql_database_instance.mainpostgres]
 }

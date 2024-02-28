@@ -12,4 +12,4 @@ PSQL_HOSTNAME=${psql_hostname}
 EOF
 
 #Reload
-sudo systemctl daemon-reload
+sudo systemctl restart webappdev.service
