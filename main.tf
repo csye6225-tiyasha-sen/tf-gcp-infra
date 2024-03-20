@@ -168,7 +168,6 @@ resource "google_sql_database_instance" "mainpostgres" {
   depends_on          = [google_service_networking_connection.servicenetworking]
 
 
-
   settings {
     tier = var.tier
 
@@ -187,11 +186,10 @@ resource "google_sql_database_instance" "mainpostgres" {
 }
 
 resource "google_sql_database" "database" {
-  for_each        = google_sql_database_instance.mainpostgres
-  name            = var.database_name
-  instance        = each.value.id
-  depends_on      = [google_sql_database_instance.mainpostgres]
-  deletion_policy = "ABANDON"
+  for_each   = google_sql_database_instance.mainpostgres
+  name       = var.database_name
+  instance   = each.value.id
+  depends_on = [google_sql_database_instance.mainpostgres]
 
 }
 
@@ -203,12 +201,11 @@ resource "random_password" "password" {
 
 #users
 resource "google_sql_user" "users" {
-  for_each        = google_sql_database_instance.mainpostgres
-  name            = var.sql_user_name
-  instance        = each.value.id
-  password        = random_password.password.result
-  depends_on      = [google_sql_database.database]
-  deletion_policy = "ABANDON"
+  for_each   = google_sql_database_instance.mainpostgres
+  name       = var.sql_user_name
+  instance   = each.value.id
+  password   = random_password.password.result
+  depends_on = [google_sql_database.database]
 }
 
 resource "google_service_account" "service_account" {
