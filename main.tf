@@ -324,10 +324,10 @@ resource "google_cloudfunctions2_function" "function" {
     available_memory   = "256M"
     timeout_seconds    = 60
     environment_variables = {
-      PSQL_DATABASE = google_sql_database.database.name
-      PSQL_USERNAME = google_sql_user.users.name
-      PSQL_PASSWORD = google_sql_user.users.password
-      PSQL_HOSTNAME = google_compute_global_address.private_ip_address.address
+      PSQL_DATABASE = google_sql_database.database[each.key].name
+      PSQL_USERNAME = google_sql_user.users[each.key].name
+      PSQL_PASSWORD = google_sql_user.users[each.key].password
+      PSQL_HOSTNAME = google_compute_global_address.private_ip_address[each.key].address
     }
     ingress_settings      = "ALLOW_ALL"
     service_account_email = google_service_account.service_account.email
