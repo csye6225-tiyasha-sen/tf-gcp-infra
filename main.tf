@@ -309,7 +309,7 @@ resource "google_cloudfunctions2_function" "function" {
 
   build_config {
     runtime     = "nodejs20"
-    entry_point = "verify_email"
+    entry_point = "helloPubSub"
     source {
       storage_source {
         bucket = "bucket-gcf-source"
@@ -323,9 +323,12 @@ resource "google_cloudfunctions2_function" "function" {
     min_instance_count = 0
     available_memory   = "256M"
     timeout_seconds    = 60
-    # environment_variables = {
-    #   SERVICE_CONFIG_TEST = "config_test"
-    # }
+    environment_variables = {
+      PSQL_DATABASE = google_sql_database.database.name
+      PSQL_USERNAME = google_sql_user.users.name
+      PSQL_PASSWORD = google_sql_user.users.password
+      PSQL_HOSTNAME = google_compute_global_address.private_ip_address.address
+    }
     ingress_settings      = "ALLOW_ALL"
     service_account_email = google_service_account.service_account.email
 
